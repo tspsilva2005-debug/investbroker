@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>InvestBroker – Simulador de Trading</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif}
+:root{color-scheme:dark;--bg-main:#1e222d;--bg-panel:#2a2e39;--bg-dark:#131722;--text-main:#d1d4dc;--text-muted:#787b86;--green:#089981;--red:#f23645;--blue:#2962ff;--border:#363a45;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{background:var(--bg-main);color:var(--text-main);min-height:100vh}
+.view{display:none}.view.on{display:block}
+button{font-family:inherit}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+
+#login.on{display:flex;justify-content:center;align-items:center;min-height:100vh;background:var(--bg-dark);padding:16px}
+.login-box{background:var(--bg-main);padding:40px;border-radius:8px;width:100%;max-width:350px;box-shadow:0 10px 25px rgba(0,0,0,.5);border:1px solid var(--bg-panel);text-align:center}
+.logo{font-size:24px;font-weight:bold;color:#fff;margin-bottom:8px;letter-spacing:1px}.logo span{color:var(--green)}
+.demo-note{font-size:.8rem;color:var(--text-muted);margin-bottom:24px}
+.ig{margin-bottom:15px;text-align:left}.ig label{display:block;font-size:13px;margin-bottom:5px;color:var(--text-muted)}
+.ig input{width:100%;padding:12px;border-radius:4px;border:1px solid var(--border);background:var(--bg-dark);color:#fff;outline:none}
+.ig input:focus{border-color:var(--green)}
+.btn-login{width:100%;padding:14px;background:var(--green);color:#fff;border:none;border-radius:4px;font-weight:bold;font-size:16px;cursor:pointer;margin-top:10px}
+.btn-login:hover{background:#067a67}
+.err{color:var(--red);font-size:14px;margin-top:10px;display:none}
+
+#trade.on{display:flex;flex-direction:column;height:100vh}
+.topbar{min-height:50px;background:var(--bg-panel);display:flex;justify-content:space-between;align-items:center;padding:6px 15px;border-bottom:1px solid var(--border);gap:10px;flex-wrap:wrap}
+.logo-area{display:flex;align-items:center;gap:10px;font-weight:bold;font-size:1.2rem;color:#fff}.logo-area span{color:var(--green)}
+.logo-area small{font-size:.7rem;color:var(--text-muted);font-weight:normal;margin-left:5px}
+.bonus{background:var(--blue);color:#fff;padding:5px 15px;border-radius:20px;font-size:.8rem}
+.account{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.balance{background:var(--bg-dark);padding:5px 10px;border-radius:4px;font-size:.9rem;display:flex;flex-direction:column}
+.balance small{font-size:.65rem;color:var(--text-muted)}
+.btn-dep{background:var(--green);color:#fff;border:none;padding:8px 15px;border-radius:4px;cursor:pointer;font-weight:bold}
+.btn-wd{background:var(--border);color:#fff;border:none;padding:8px 15px;border-radius:4px;cursor:pointer}
+.btn-out{background:transparent;color:var(--red);border:1px solid var(--red);padding:6px 10px;border-radius:4px;cursor:pointer;font-size:.8rem}
+.main{display:flex;flex:1;min-height:0}
+.sidebar{width:70px;background:var(--bg-panel);display:flex;flex-direction:column;align-items:center;padding-top:10px;border-right:1px solid var(--border)}
+.mi{display:flex;flex-direction:column;align-items:center;width:100%;padding:15px 0;color:var(--text-muted);cursor:pointer;font-size:.65rem;gap:5px;text-transform:uppercase}
+.mi.active{background:var(--bg-main);color:var(--blue);border-left:3px solid var(--blue)}.mi:hover{color:#fff}
+.chart-area{flex:1;display:flex;flex-direction:column;background:var(--bg-dark);min-width:0}
+.assets{display:flex;gap:5px;padding:10px;overflow-x:auto;background:var(--bg-main);border-bottom:1px solid var(--border)}
+.asset{background:var(--bg-panel);padding:5px 10px;border-radius:4px;font-size:.8rem;white-space:nowrap;display:flex;flex-direction:column;align-items:center;cursor:pointer}
+.asset.active{border:1px solid var(--blue)}
+.pct{color:var(--green);font-size:.75rem;font-weight:bold}.pct.high{color:var(--red)}
+.canvas{flex:1;position:relative;min-height:240px;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:50px 50px}
+.candle{position:absolute;width:15px;bottom:30%}.candle.g{background:var(--green)}.candle.r{background:var(--red)}
+.tools{position:absolute;left:10px;top:50px;display:flex;flex-direction:column;gap:10px}
+.tool{background:var(--bg-panel);border:1px solid var(--border);color:var(--text-muted);width:30px;height:30px;border-radius:4px;cursor:pointer}
+.right{width:300px;background:var(--bg-panel);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto}
+.ph{padding:15px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:8px}
+.ph h3{font-size:1rem}.pending{color:var(--blue);font-size:.7rem}
+.form{padding:15px;display:flex;flex-direction:column;gap:15px}
+.g2{display:flex;flex-direction:column;gap:5px}.g2 label{font-size:.75rem;color:var(--text-muted)}
+.ctrl{display:flex;background:var(--bg-dark);border:1px solid var(--border);border-radius:4px;overflow:hidden}
+.ctrl button{background:none;border:none;color:var(--text-main);padding:10px;cursor:pointer;font-size:1.2rem}
+.ctrl input{flex:1;min-width:0;background:none;border:none;color:#fff;text-align:center;font-size:1rem;outline:none}
+.payout{display:flex;justify-content:space-between;font-size:.85rem}.payout b{color:var(--green)}
+.tb{display:flex;flex-direction:column;gap:10px}
+.bt{padding:15px;border:none;border-radius:4px;color:#fff;font-size:1.1rem;font-weight:bold;cursor:pointer;display:flex;justify-content:space-between}
+.buy{background:var(--green)}.sell{background:var(--red)}.bt:hover{opacity:.9}
+.hist{flex:1;border-top:1px solid var(--border);display:flex;flex-direction:column}
+.tabs{display:flex;border-bottom:1px solid var(--border)}
+.tabs div{flex:1;text-align:center;padding:10px;font-size:.85rem;color:var(--text-muted)}
+.tabs div.active{color:var(--blue);border-bottom:2px solid var(--blue)}
+.empty{flex:1;display:flex;justify-content:center;align-items:center;text-align:center;padding:20px;color:var(--text-muted);font-size:.85rem}
+@media(max-width:800px){
+ #trade.on{height:auto;min-height:100vh}.main{flex-direction:column}
+ .sidebar{width:100%;flex-direction:row;overflow-x:auto;padding:0;border-right:0;border-bottom:1px solid var(--border)}
+ .mi{padding:10px 14px;width:auto}.mi.active{border-left:0;border-bottom:3px solid var(--blue)}
+ .right{width:100%;border-left:0}.bonus{display:none}
+}
+
+#chart{position:absolute;inset:0;width:100%;height:100%}.tools{z-index:2}
+.tabs div{cursor:pointer}.list{flex:1;overflow-y:auto;min-height:120px}
+.row{display:flex;justify-content:space-between;gap:8px;padding:10px 15px;border-bottom:1px solid var(--border);font-size:.8rem}
+.row small{color:var(--text-muted);display:block}.win{color:var(--green)}.lose{color:var(--red)}
+.empty2{padding:20px;text-align:center;color:var(--text-muted);font-size:.85rem}
+#deposito.on{display:flex;justify-content:center;align-items:center;min-height:100vh;padding:16px}
+.dep{background:var(--bg-panel);width:100%;max-width:500px;border-radius:8px;border:1px solid var(--border);overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.dh{padding:20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.dh h2{font-size:1.2rem;color:#fff}
+.back{background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:1rem}.back:hover{color:#fff}
+.dc{padding:20px}
+.binfo{background:var(--bg-dark);padding:15px;border-radius:4px;margin-bottom:20px;display:flex;justify-content:space-between}
+.binfo span{color:var(--text-muted);font-size:.9rem}.binfo strong{color:var(--green);font-size:1.1rem}
+.methods{display:flex;gap:10px;margin-bottom:20px}
+.method{flex:1;background:var(--bg-dark);border:1px solid var(--border);padding:15px;text-align:center;border-radius:4px;cursor:pointer;color:var(--text-muted)}
+.method.active{border-color:var(--green);color:var(--green);background:rgba(8,153,129,.1)}
+.method i{display:block;font-size:1.5rem;margin-bottom:5px;font-style:normal}
+.dgroup{margin-bottom:20px}.dgroup label{display:block;font-size:.85rem;color:var(--text-muted);margin-bottom:8px}
+.dctrl{display:flex;background:var(--bg-dark);border:1px solid var(--border);border-radius:4px;overflow:hidden}
+.dctrl span{padding:12px;color:var(--text-muted);background:rgba(0,0,0,.2)}
+.dctrl input{flex:1;min-width:0;background:none;border:none;color:#fff;padding:12px;font-size:1.1rem;outline:none}
+.quick{display:flex;gap:10px;margin-top:10px}
+.quick button{flex:1;background:var(--bg-dark);border:1px solid var(--border);color:var(--text-main);padding:8px;border-radius:4px;cursor:pointer}
+.quick button:hover{border-color:var(--blue)}
+.btn-confirm{width:100%;padding:15px;background:var(--green);color:#fff;border:none;border-radius:4px;font-weight:bold;font-size:1.1rem;cursor:pointer}
+.btn-confirm:hover{background:#067a67}
+.msg{text-align:center;margin-top:15px;font-size:.9rem;min-height:1.2em}
+.msg.ok{color:var(--green)}.msg.bad{color:var(--red)}
+.sim{font-size:.75rem;color:var(--text-muted);text-align:center;margin-top:12px}
+</style>
+</head>
+<body>
+
+<section id="login" class="view">
+ <div class="login-box">
+  <div class="logo">Invest<span>Broker</span></div>
+  <p class="demo-note">Simulador com saldo fictício. Nenhum dado é enviado ou salvo em servidor.</p>
+  <div class="ig"><label for="username">Seu nome</label><input type="text" id="username" placeholder="Digite seu nome" autocomplete="off"></div>
+  <div class="ig"><label for="email">E-mail</label><input type="email" id="email" placeholder="seu@email.com" autocomplete="off"></div>
+  <div class="ig"><label for="password">Senha</label><input type="password" id="password" placeholder="Sua senha" autocomplete="off"></div>
+  <button class="btn-login" id="btn-enter">Entrar no simulador</button>
+  <div id="login-err" class="err">Preencha todos os campos.</div>
+ </div>
+</section>
+
+<section id="trade" class="view">
+ <header class="topbar">
+  <div class="logo-area"><span style="font-size:1.5rem">≡</span> Invest<span>Broker</span> <small>SIMULADOR DE TRADING</small></div>
+  <div class="bonus">🚀 Bônus de demonstração <strong>50%</strong></div>
+  <div class="account">
+   <div class="balance"><small id="uname">CONTA DEMO</small><span id="ubal">$0.00</span></div>
+   <button class="btn-dep" id="go-dep">+ Depósito</button>
+   <button class="btn-wd">Retirada</button>
+   <button class="btn-out" id="btn-out">Sair</button>
+  </div>
+ </header>
+ <div class="main">
+  <aside class="sidebar">
+   <div class="mi active"><span style="font-size:1.2rem">📈</span>Trade</div>
+   <div class="mi"><span style="font-size:1.2rem">❓</span>Suporte</div>
+   <div class="mi"><span style="font-size:1.2rem">👤</span>Conta</div>
+   <div class="mi"><span style="font-size:1.2rem">🏆</span>Torneios</div>
+   <div class="mi"><span style="font-size:1.2rem">🌐</span>Mercado</div>
+  </aside>
+  <main class="chart-area">
+   <div class="assets">
+    <div class="asset">🇪🇺 EUR/CHF <span class="pct">35%</span></div>
+    <div class="asset">🇺🇸 USD/BTC <span class="pct high">93%</span></div>
+    <div class="asset">🇺🇸 USD/PHP <span class="pct high">93%</span></div>
+    <div class="asset">🇺🇸 USD/PKR <span class="pct high">93%</span></div>
+    <div class="asset">🇳🇿 NZD/CAD <span class="pct high">92%</span></div>
+    <div class="asset active">🇺🇸 USD/IDR (OTC) <span class="pct high">87%</span></div>
+   </div>
+   <div class="canvas">
+    <div class="tools"><button class="tool" aria-label="Desenhar">✏️</button><button class="tool" aria-label="Indicadores">📈</button><button class="tool" aria-label="Configurações">⚙️</button></div>
+    <canvas id="chart" aria-label="Gráfico de preço simulado"></canvas>
+   </div>
+  </main>
+  <aside class="right">
+   <div class="ph"><h3 id="aname">🇺🇸 USD/IDR (OTC)</h3><div class="pending">🟢 PREÇO SIMULADO</div></div>
+   <div class="form">
+    <div class="g2"><label>Tempo</label><div class="ctrl"><button id="tm" aria-label="Diminuir tempo">-</button><input type="text" id="time" value="00:01:00" readonly><button id="tp" aria-label="Aumentar tempo">+</button></div></div>
+    <div class="g2"><label for="inv">Investimento ($)</label><div class="ctrl"><button id="im" aria-label="Diminuir">-</button><input type="number" id="inv" value="100" min="1"><button id="ip" aria-label="Aumentar">+</button></div></div>
+    <div class="payout"><span>Pagamento</span><b id="pay">$187.00</b></div>
+    <div class="tb"><button class="bt buy" id="buy">Comprar <span>⬆️</span></button><button class="bt sell" id="sell">Vender <span>⬇️</span></button></div>
+    <div class="msg" id="tmsg" role="status"></div>
+   </div>
+   <div class="hist">
+    <div class="tabs"><div class="active" id="tab-o">Operações 0</div><div id="tab-h">Histórico 0</div></div>
+    <div class="list" id="list"></div>
+   </div>
+  </aside>
+ </div>
+</section>
+
+<section id="deposito" class="view">
+ <div class="dep">
+  <div class="dh"><h2>Adicionar fundos</h2><button class="back" id="close-dep">✖ Fechar</button></div>
+  <div class="dc">
+   <div class="binfo"><span>Saldo atual:</span><strong id="cbal">$0.00</strong></div>
+   <div class="methods">
+    <div class="method active"><i>⚡</i>PIX</div>
+    <div class="method"><i>💳</i>Cartão</div>
+    <div class="method"><i>₿</i>Cripto</div>
+   </div>
+   <div class="dgroup">
+    <label for="amount">Valor do depósito ($)</label>
+    <div class="dctrl"><span>$</span><input type="number" id="amount" placeholder="0.00" min="10"></div>
+    <div class="quick"><button data-v="50">+$50</button><button data-v="100">+$100</button><button data-v="500">+$500</button><button data-v="1000">+$1000</button></div>
+   </div>
+   <button class="btn-confirm" id="confirm">Confirmar depósito</button>
+   <div id="dmsg" class="msg" role="status"></div>
+   <p class="sim">Simulação: o valor é somado a um saldo fictício e nenhum pagamento real é feito.</p>
+  </div>
+ </div>
+</section>
+
+<script>
+const $=id=>document.getElementById(id);
+const store={
+ get(k){try{return localStorage.getItem(k)}catch(e){return mem[k]||null}},
+ set(k,v){try{localStorage.setItem(k,v)}catch(e){mem[k]=v}},
+ clear(){try{localStorage.clear()}catch(e){}for(const k in mem)delete mem[k]}
+};
+const mem={};
+const routes=['login','corretora','deposito'];
+const ids={login:'login',corretora:'trade',deposito:'deposito'};
+function bal(){return parseFloat(store.get('user_balance'))||0}
+function go(r){location.hash=r}
+var render=function(){
+ let r=location.hash.replace('#','');
+ if(!routes.includes(r))r='login';
+ if(r!=='login'&&!store.get('user_name'))r='login';
+ document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));
+ $(ids[r]).classList.add('on');
+ if(r==='corretora'){
+  $('uname').textContent=(store.get('user_name')||'').toUpperCase()+' · DEMO';
+  $('ubal').textContent='$'+bal().toFixed(2);
+ }
+ if(r==='deposito')$('cbal').textContent='$'+bal().toFixed(2);
+ window.scrollTo(0,0);
+}
+window.addEventListener('hashchange',()=>render());
+
+$('btn-enter').onclick=()=>{
+ if(!$('username').value||!$('email').value||!$('password').value){$('login-err').style.display='block';return}
+ store.set('user_name',$('username').value);
+ store.set('user_email',$('email').value);
+ store.set('user_balance','10000');
+ $('password').value='';
+ go('corretora');
+};
+$('btn-out').onclick=()=>{store.clear();go('login')};
+$('go-dep').onclick=()=>go('deposito');
+$('close-dep').onclick=()=>go('corretora');
+
+document.querySelectorAll('.method').forEach(m=>m.onclick=()=>{
+ document.querySelectorAll('.method').forEach(x=>x.classList.remove('active'));m.classList.add('active');
+});
+document.querySelectorAll('.quick button').forEach(b=>b.onclick=()=>{$('amount').value=b.dataset.v});
+
+// ==========================================
+// CHAMADA PARA A GATEWAY (FREEPAY) - ATUALIZADA
+// ==========================================
+$('confirm').onclick = async () => {
+ const a = parseFloat($('amount').value), m = $('dmsg');
+ if(isNaN(a) || a < 10){
+     m.className='msg bad';
+     m.textContent='O valor mínimo é $10.00.';
+     return;
+ }
+ 
+ m.className='msg ok';
+ m.textContent='Gerando pagamento seguro...';
+
+ try {
+     const response = await fetch('/.netlify/functions/criar-pagamento', {
+         method: 'POST',
+         headers: { 'Content-Type': 'application/json' },
+         body: JSON.stringify({ 
+             amount: a,
+             customerName: store.get('user_name') || 'Cliente',
+             customerEmail: store.get('user_email') || 'cliente@email.com'
+         })
+     });
+
+     const data = await response.json();
+
+     // NOVO: Verifica se recebeu o QR Code da FreePay
+     if (data.qrCode) {
+         m.className='msg ok';
+         m.innerHTML = `<div style="text-align:left; background:var(--bg-dark); padding:12px; border-radius:4px; margin-top:10px; border:1px solid var(--border);">
+             <b style="font-size:0.85rem; color:var(--text-main); display:block; margin-bottom:5px;">Código Pix Copia e Cola:</b>
+             <textarea readonly style="width:100%; height:60px; font-size:11px; background:var(--bg-panel); color:var(--green); border:1px solid var(--border); padding:8px; resize:none; border-radius:4px;">${data.qrCode}</textarea>
+             <button id="btn-copy" style="margin-top:10px; padding:10px; width:100%; background:var(--green); color:#fff; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">Copiar Código Pix</button>
+         </div>`;
+         
+         // Adiciona a função para copiar
+         $('btn-copy').onclick = () => {
+             navigator.clipboard.writeText(data.qrCode);
+             $('btn-copy').textContent = 'Copiado com sucesso!';
+             $('btn-copy').style.background = 'var(--blue)';
+         };
+     } else {
+         m.className='msg bad';
+         m.textContent = 'Erro: ' + (data.error || 'Falha ao gerar pagamento.');
+     }
+ } catch (err) {
+     m.className='msg bad';
+     m.textContent = 'Erro de conexão com o servidor.';
+     console.error(err);
+ }
+};
+
+const A=[['🇪🇺 EUR/CHF',0.96,35],['🇺🇸 USD/BTC',68000,93],['🇺🇸 USD/PHP',58,93],['🇺🇸 USD/PKR',278,93],['🇳🇿 NZD/CAD',0.82,92],['🇺🇸 USD/IDR (OTC)',17835.05,87]].map(([n,p,r])=>({n,p,r,h:[p]}));
+const T=[15,30,60,120,300];let ti=2,cur=5,tab='o',open=[],done=[];
+try{done=JSON.parse(store.get('done')||'[]')}catch(e){}
+function step(a){const o=a.p;a.p*=1+(Math.random()-.5)*.0016;a.h.push(a.p);if(a.h.length>120)a.h.shift();if(!a.c)a.c=[];let k=a.c[a.c.length-1];if(!k||k.n>=5){k={o,h:o,l:o,c:o,n:0};a.c.push(k);if(a.c.length>40)a.c.shift()}k.h=Math.max(k.h,a.p);k.l=Math.min(k.l,a.p);k.c=a.p;k.n++}
+A.forEach(a=>{for(let i=0;i<200;i++)step(a)});
+const fmtP=v=>v>1000?v.toFixed(2):v.toFixed(4);
+const fmtT=s=>[Math.floor(s/3600),Math.floor(s%3600/60),s%60].map(n=>String(n).padStart(2,'0')).join(':');
+function setBal(v){store.set('user_balance',String(v));$('ubal').textContent='$'+v.toFixed(2)}
+function say(t,c){const m=$('tmsg');m.className='msg '+(c||'bad');m.textContent=t}
+function drawAssets(){
+ document.querySelector('.assets').innerHTML=A.map((a,i)=>'<div class="asset'+(i===cur?' active':'')+'" data-i="'+i+'">'+a.n+' <span class="pct">'+a.r+'%</span></div>').join('');
+ $('aname').textContent=A[cur].n;upPay();
+}
+function upPay(){const v=parseFloat($('inv').value)||0;$('pay').textContent='$'+(v*(1+A[cur].r/100)).toFixed(2)}
+function renderList(){
+ $('tab-o').textContent='Operações '+open.length;$('tab-h').textContent='Histórico '+done.length;
+ $('tab-o').className=tab==='o'?'active':'';$('tab-h').className=tab==='h'?'active':'';
+ const L=$('list');
+ if(tab==='o'){
+  L.innerHTML=open.length?open.map(t=>'<div class="row"><div>'+A[t.i].n+'<small>'+(t.dir==='buy'?'⬆️ Compra':'⬇️ Venda')+' · entrada '+fmtP(t.entry)+'</small></div><div style="text-align:right">$'+t.inv.toFixed(2)+'<small>'+fmtT(Math.max(0,Math.ceil((t.end-Date.now())/1000)))+'</small></div></div>').join(''):'<div class="empty2">Nenhuma operação aberta.</div>';
+ }else{
+  L.innerHTML=done.length?done.map(t=>'<div class="row"><div>'+t.n+'<small>'+(t.dir==='buy'?'⬆️ Compra':'⬇️ Venda')+' · $'+t.inv.toFixed(2)+'</small></div><div class="'+(t.profit>0?'win':t.profit<0?'lose':'')+'" style="text-align:right">'+(t.profit>0?'+':'')+'$'+t.profit.toFixed(2)+'</div></div>').join(''):'<div class="empty2">Nenhuma operação encerrada ainda.</div>';
+ }
+}
+function place(dir){
+ const inv=parseFloat($('inv').value);
+ if(!(inv>=1))return say('Informe um investimento de pelo menos $1.');
+ if(inv>bal())return say('Saldo insuficiente. Adicione fundos fictícios em Depósito.');
+ setBal(bal()-inv);
+ open.push({i:cur,dir,inv,entry:A[cur].p,end:Date.now()+T[ti]*1000});
+ store.set('open',JSON.stringify(open));
+ say('Operação aberta em '+A[cur].n+'.','ok');renderList();
+}
+function tick(){
+ A.forEach(step);const now=Date.now();let changed=false;
+ open=open.filter(t=>{
+  if(now<t.end)return true;
+  const a=A[t.i],eq=a.p===t.entry,res=eq?0:((t.dir==='buy')===(a.p>t.entry)?1:-1);
+  const profit=res===1?t.inv*a.r/100:res===-1?-t.inv:0;
+  setBal(bal()+(res===-1?0:t.inv+profit));
+  done.unshift({n:a.n,dir:t.dir,inv:t.inv,profit});changed=true;
+  say(res===1?'Você ganhou $'+profit.toFixed(2)+' em '+a.n+'.':res===0?'Empate em '+a.n+': valor devolvido.':'Você perdeu $'+t.inv.toFixed(2)+' em '+a.n+'.',res===1?'ok':'bad');
+  return false;
+ });
+ if(changed){done=done.slice(0,30);store.set('done',JSON.stringify(done));store.set('open',JSON.stringify(open))}
+ if($('trade').classList.contains('on')){draw();renderList()}
+}
+function draw(){
+ const c=$('chart'),d=window.devicePixelRatio||1,w=c.clientWidth,h=c.clientHeight;if(!w)return;
+ if(c.width!==Math.round(w*d)||c.height!==Math.round(h*d)){c.width=Math.round(w*d);c.height=Math.round(h*d)}
+ const x=c.getContext('2d');x.setTransform(d,0,0,d,0,0);x.clearRect(0,0,w,h);
+ const a=A[cur],cs=a.c;let lo=Math.min(...cs.map(k=>k.l)),hi=Math.max(...cs.map(k=>k.h));const pad=(hi-lo)*.15||a.p*.001;lo-=pad;hi+=pad;
+ const Y=v=>h-30-(h-60)*(v-lo)/(hi-lo),sp=(w-130)/cs.length,bw=Math.max(2,sp*.6);
+ cs.forEach((k,i)=>{const cx=60+sp*(i+.5),up=k.c>=k.o;x.fillStyle=x.strokeStyle=up?'#089981':'#f23645';x.lineWidth=1;x.beginPath();x.moveTo(cx,Y(k.h));x.lineTo(cx,Y(k.l));x.stroke();const t=Y(Math.max(k.o,k.c)),b=Y(Math.min(k.o,k.c));x.fillRect(cx-bw/2,t,bw,Math.max(1,b-t))});
+ open.filter(t=>t.i===cur).forEach(t=>{x.setLineDash([6,4]);x.lineWidth=1;x.strokeStyle=t.dir==='buy'?'#089981':'#f23645';x.beginPath();x.moveTo(0,Y(t.entry));x.lineTo(w,Y(t.entry));x.stroke()});
+ x.setLineDash([]);const y=Y(a.p);x.fillStyle='#2962ff';x.fillRect(w-68,y-9,66,18);x.fillStyle='#fff';x.font='11px sans-serif';x.fillText(fmtP(a.p),w-64,y+4);
+}
+document.querySelector('.assets').addEventListener('click',e=>{const el=e.target.closest('.asset');if(el){cur=+el.dataset.i;drawAssets();draw()}});
+$('tm').onclick=()=>{ti=Math.max(0,ti-1);$('time').value=fmtT(T[ti])};
+$('tp').onclick=()=>{ti=Math.min(T.length-1,ti+1);$('time').value=fmtT(T[ti])};
+$('im').onclick=()=>{$('inv').value=Math.max(1,(parseFloat($('inv').value)||0)-50);upPay()};
+$('ip').onclick=()=>{$('inv').value=(parseFloat($('inv').value)||0)+50;upPay()};
+$('inv').oninput=upPay;
+$('buy').onclick=()=>place('buy');$('sell').onclick=()=>place('sell');
+$('tab-o').onclick=()=>{tab='o';renderList()};$('tab-h').onclick=()=>{tab='h';renderList()};
+document.querySelector('.btn-wd').onclick=()=>say('Retirada indisponível: o saldo do simulador é fictício.');
+try{const o=JSON.parse(store.get('open')||'[]');if(o.length){setBal(bal()+o.reduce((s,t)=>s+t.inv,0));store.set('open','[]')}}catch(e){}
+drawAssets();renderList();setInterval(tick,700);window.addEventListener('resize',draw);
+const _render=render;render=function(){_render();if($('trade').classList.contains('on')){renderList();draw()}};
+render();
+</script>
+</body>
+</html>
