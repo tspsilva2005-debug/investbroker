@@ -234,7 +234,7 @@ document.querySelectorAll('.method').forEach(m=>m.onclick=()=>{
 document.querySelectorAll('.quick button').forEach(b=>b.onclick=()=>{$('amount').value=b.dataset.v});
 
 // ==========================================
-// CHAMADA PARA A GATEWAY (FREEPAY) - ATUALIZADA
+// CHAMADA PARA A GATEWAY (FREEPAY) - CLOUDFLARE PAGES
 // ==========================================
 $('confirm').onclick = async () => {
  const a = parseFloat($('amount').value), m = $('dmsg');
@@ -248,7 +248,8 @@ $('confirm').onclick = async () => {
  m.textContent='Gerando pagamento seguro...';
 
  try {
-     const response = await fetch('/.netlify/functions/criar-pagamento', {
+     // AQUI ESTÁ A CORREÇÃO: URL correta do Cloudflare Pages
+     const response = await fetch('/criar-pagamento', {
          method: 'POST',
          headers: { 'Content-Type': 'application/json' },
          body: JSON.stringify({ 
@@ -260,7 +261,6 @@ $('confirm').onclick = async () => {
 
      const data = await response.json();
 
-     // NOVO: Verifica se recebeu o QR Code da FreePay
      if (data.qrCode) {
          m.className='msg ok';
          m.innerHTML = `<div style="text-align:left; background:var(--bg-dark); padding:12px; border-radius:4px; margin-top:10px; border:1px solid var(--border);">
@@ -269,7 +269,6 @@ $('confirm').onclick = async () => {
              <button id="btn-copy" style="margin-top:10px; padding:10px; width:100%; background:var(--green); color:#fff; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">Copiar Código Pix</button>
          </div>`;
          
-         // Adiciona a função para copiar
          $('btn-copy').onclick = () => {
              navigator.clipboard.writeText(data.qrCode);
              $('btn-copy').textContent = 'Copiado com sucesso!';
