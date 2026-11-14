@@ -30,7 +30,7 @@ export async function onRequestPost(context) {
     const payload = {
       amount: valorCentavos,
       payment_method: "pix",
-      postback_url: "https://seu-projeto.pages.dev/api/webhook", // Lembre-se de trocar "seu-projeto" depois!
+     postback_url: "https://investbrokerr.pages.dev/webhook",
       customer: {
         name: customerName || "Cliente Teste",
         email: emailFinal,
