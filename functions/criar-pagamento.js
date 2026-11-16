@@ -11,37 +11,38 @@ export async function onRequestPost(context) {
   try {
     const { amount, customerName, customerEmail } = await request.json();
     
-    const publicKey = env.FREEPAY_PUBLIC_KEY;
-    const secretKey = env.FREEPAY_SECRET_KEY;
+    const secretKey = env.BEEHIVE_SECRET_KEY;
     
-    if (!publicKey || !secretKey) {
-      return new Response(JSON.stringify({ error: "Chaves de API não configuradas." }), { status: 500, headers });
+    if (!secretKey) {
+      return new Response(JSON.stringify({ error: "Chave secreta da Pay Be Hive não configurada." }), { status: 500, headers });
     }
 
-    // Usa btoa para codificar em Base64 (nativo do Cloudflare)
-    const authString = btoa(`${publicKey}:${secretKey}`);
     const valorCentavos = Math.round(Number(amount) * 100);
-
+    
     let emailFinal = customerEmail;
     if (!emailFinal || !emailFinal.includes('@')) {
         emailFinal = "cliente@investbroker.com";
     }
 
+    // Auth Basic: secretKey + ":" (a documentação manda usar Basic)
+    const authString = btoa(`${secretKey}:`);
+
     const payload = {
       amount: valorCentavos,
-      payment_method: "pix",
-     postback_url: "https://investbrokerr.pages.dev/webhook",
+      paymentMethod: "pix",
       customer: {
         name: customerName || "Cliente Teste",
         email: emailFinal,
         document: { type: "cpf", number: "52998224725" },
-        phone: "11999999999" 
+        phone: "11999999999"
       },
-      items: [{ title: "Deposito", unit_price: valorCentavos, quantity: 1, tangible: false }],
-      pix: { expires_in_days: 1 }
+      items: [
+        { title: "Deposito", unitPrice: valorCentavos, quantity: 1, tangible: false }
+      ],
+      postbackUrl: "https://investbrokerr.pages.dev/webhook" // Lembre-se de verificar seu link exato
     };
 
-    const response = await fetch("https://api.freepaybrasil.com/v1/payment-transaction/create", {
+    const response = await fetch("https://api.conta.paybeehive.com.br/v1/transactions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -55,18 +56,17 @@ export async function onRequestPost(context) {
     try { data = JSON.parse(responseText); } catch (e) { data = {}; }
 
     if (!response.ok) {
-      let mensagemErro = data.error_messages?.[0]?.message || data.title || data.message || "A FreePay recusou a transação.";
-      if (data.errors) {
-          const detalhes = Object.entries(data.errors).map(([campo, msgs]) => {
-              const msgStr = Array.isArray(msgs) ? msgs.join(', ') : String(msgs);
-              return `${campo}: ${msgStr}`;
-          }).join(' | ');
-          if (detalhes) mensagemErro = `Erro: ${detalhes}`;
-      }
+      let mensagemErro = data.message || data.error || `A Pay Be Hive recusou a transação (Status: ${response.status}).`;
       return new Response(JSON.stringify({ error: mensagemErro }), { status: response.status, headers });
     }
 
-    const qrCode = data.data?.pix?.qr_code || data.pix?.qr_code;
+    // Tenta extrair o QR Code de diferentes locais possíveis na resposta
+    const qrCode = data.pix?.qrCode || data.qrCode || data.pix?.qrCodeImage || data.qrCodeImage;
+    
+    if (!qrCode) {
+      return new Response(JSON.stringify({ error: "Resposta da API não contém o QR Code esperado.", debug: data }), { status: 500, headers });
+    }
+
     return new Response(JSON.stringify({ qrCode: qrCode }), { status: 200, headers });
 
   } catch (error) {
