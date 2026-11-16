@@ -11,10 +11,11 @@ export async function onRequestPost(context) {
   try {
     const { amount, customerName, customerEmail } = await request.json();
     
-    const secretKey = env.BEEHIVE_SECRET_KEY;
+    // A chave da FinX Pay deve ser configurada no Cloudflare como FINX_API_KEY
+    const apiKey = env.FINX_API_KEY;
     
-    if (!secretKey) {
-      return new Response(JSON.stringify({ error: "Chave secreta da Pay Be Hive não configurada." }), { status: 500, headers });
+    if (!apiKey) {
+      return new Response(JSON.stringify({ error: "Chave da FinX Pay não configurada." }), { status: 500, headers });
     }
 
     const valorCentavos = Math.round(Number(amount) * 100);
@@ -24,29 +25,27 @@ export async function onRequestPost(context) {
         emailFinal = "cliente@investbroker.com";
     }
 
-    // Auth Basic: secretKey + ":" (a documentação manda usar Basic)
-    const authString = btoa(`${secretKey}:`);
-
+    // Payload genérico para criação de cobrança PIX
     const payload = {
       amount: valorCentavos,
-      paymentMethod: "pix",
+      payment_method: "pix",
       customer: {
         name: customerName || "Cliente Teste",
         email: emailFinal,
         document: { type: "cpf", number: "52998224725" },
         phone: "11999999999"
       },
-      items: [
-        { title: "Deposito", unitPrice: valorCentavos, quantity: 1, tangible: false }
-      ],
-      postbackUrl: "https://investbrokerr.pages.dev/webhook" // Lembre-se de verificar seu link exato
+      items: [{ title: "Deposito", unit_price: valorCentavos, quantity: 1, tangible: false }],
+      // URL do seu webhook no Cloudflare Pages
+      postback_url: "https://investbrokerr.pages.dev/webhook"
     };
 
-    const response = await fetch("https://api.conta.paybeehive.com.br/v1/transactions", {
+    // ATENÇÃO: Confirme na documentação da FinX Pay qual é o endpoint exato (ex: /v1/pix, /v1/charges, /v1/cobranca)
+    const response = await fetch("https://api.finxpay.com/v1/pix", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Basic ${authString}`
+        "x-api-key": apiKey // Autenticação conforme a imagem do painel
       },
       body: JSON.stringify(payload)
     });
@@ -56,12 +55,12 @@ export async function onRequestPost(context) {
     try { data = JSON.parse(responseText); } catch (e) { data = {}; }
 
     if (!response.ok) {
-      let mensagemErro = data.message || data.error || `A Pay Be Hive recusou a transação (Status: ${response.status}).`;
+      let mensagemErro = data.message || data.error || `A FinX Pay recusou a transação (Status: ${response.status}).`;
       return new Response(JSON.stringify({ error: mensagemErro }), { status: response.status, headers });
     }
 
     // Tenta extrair o QR Code de diferentes locais possíveis na resposta
-    const qrCode = data.pix?.qrCode || data.qrCode || data.pix?.qrCodeImage || data.qrCodeImage;
+    const qrCode = data.qrCode || data.pix?.qr_code || data.point_of_interaction?.transaction_data?.qr_code || data.qr_code;
     
     if (!qrCode) {
       return new Response(JSON.stringify({ error: "Resposta da API não contém o QR Code esperado.", debug: data }), { status: 500, headers });
