@@ -11,35 +11,40 @@ export async function onRequestPost(context) {
   try {
     const { amount, customerName, customerEmail } = await request.json();
     
-    const apiKey = env.FINX_API_KEY;
+    const publicKey = env.FREEPAY_PUBLIC_KEY;
+    const secretKey = env.FREEPAY_SECRET_KEY;
     
-    if (!apiKey) {
-      return new Response(JSON.stringify({ error: "Chave da FinX Pay não configurada no Cloudflare." }), { status: 500, headers });
+    if (!publicKey || !secretKey) {
+      return new Response(JSON.stringify({ error: "Chaves de API não configuradas." }), { status: 500, headers });
     }
 
+    const authString = btoa(`${publicKey}:${secretKey}`);
     const valorCentavos = Math.round(Number(amount) * 100);
-    let emailFinal = customerEmail;
-    if (!emailFinal || !emailFinal.includes('@')) emailFinal = "cliente@investbroker.com";
 
-    // Payload padrão para criação de cobrança PIX
+    let emailFinal = customerEmail;
+    if (!emailFinal || !emailFinal.includes('@')) {
+        emailFinal = "cliente@investbroker.com";
+    }
+
     const payload = {
       amount: valorCentavos,
-      paymentMethod: "PIX",
+      payment_method: "pix",
+      postback_url: "https://investbrokerr.pages.dev/webhook",
       customer: {
         name: customerName || "Cliente Teste",
         email: emailFinal,
-        document: { type: "CPF", number: "52998224725" }
+        document: { type: "cpf", number: "52998224725" },
+        phone: "11999999999" 
       },
-      postbackUrl: "https://investbrokerr.pages.dev/webhook"
+      items: [{ title: "Deposito", unit_price: valorCentavos, quantity: 1, tangible: false }],
+      pix: { expires_in_days: 1 }
     };
 
-    // ⚠️ ATENÇÃO: Confirme na documentação da FinX Pay qual é a rota exata.
-    // Exemplos comuns: /v1/pix, /v1/transactions, /transactions/payment, /v1/charges
-    const response = await fetch("https://finxpay.tech/v1/pix", {
+    const response = await fetch("https://api.freepaybrasil.com/v1/payment-transaction/create", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": apiKey
+        "Authorization": `Basic ${authString}`
       },
       body: JSON.stringify(payload)
     });
@@ -49,17 +54,18 @@ export async function onRequestPost(context) {
     try { data = JSON.parse(responseText); } catch (e) { data = {}; }
 
     if (!response.ok) {
-      let mensagemErro = data.message || data.error || `A FinX Pay recusou a transação (Status: ${response.status}).`;
+      let mensagemErro = data.error_messages?.[0]?.message || data.title || data.message || "A FreePay recusou a transação.";
+      if (data.errors) {
+          const detalhes = Object.entries(data.errors).map(([campo, msgs]) => {
+              const msgStr = Array.isArray(msgs) ? msgs.join(', ') : String(msgs);
+              return `${campo}: ${msgStr}`;
+          }).join(' | ');
+          if (detalhes) mensagemErro = `Erro: ${detalhes}`;
+      }
       return new Response(JSON.stringify({ error: mensagemErro }), { status: response.status, headers });
     }
 
-    // Tenta extrair o código copia-e-cola de campos comuns na resposta
-    const qrCode = data.pix?.qrCode || data.pix?.brCode || data.qrCode || data.brCode || data.point_of_interaction?.transaction_data?.qr_code;
-    
-    if (!qrCode) {
-      return new Response(JSON.stringify({ error: "API não retornou o QR Code esperado. Verifique o formato da resposta.", debug: data }), { status: 500, headers });
-    }
-
+    const qrCode = data.data?.pix?.qr_code || data.pix?.qr_code;
     return new Response(JSON.stringify({ qrCode: qrCode }), { status: 200, headers });
 
   } catch (error) {
