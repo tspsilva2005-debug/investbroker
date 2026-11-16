@@ -15,7 +15,7 @@ export async function onRequestPost(context) {
     const secretKey = env.FREEPAY_SECRET_KEY;
     
     if (!publicKey || !secretKey) {
-      return new Response(JSON.stringify({ error: "Chaves de API não configuradas." }), { status: 500, headers });
+   return new Response(JSON.stringify({ error: "TESTE: O CODIGO NOVO DA FREEPAY ESTA RODANDO!" }), { status: 500, headers });
     }
 
     const authString = btoa(`${publicKey}:${secretKey}`);
