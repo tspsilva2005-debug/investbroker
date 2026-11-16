@@ -11,41 +11,35 @@ export async function onRequestPost(context) {
   try {
     const { amount, customerName, customerEmail } = await request.json();
     
-    // A chave da FinX Pay deve ser configurada no Cloudflare como FINX_API_KEY
     const apiKey = env.FINX_API_KEY;
     
     if (!apiKey) {
-      return new Response(JSON.stringify({ error: "Chave da FinX Pay não configurada." }), { status: 500, headers });
+      return new Response(JSON.stringify({ error: "Chave da FinX Pay não configurada no Cloudflare." }), { status: 500, headers });
     }
 
     const valorCentavos = Math.round(Number(amount) * 100);
-    
     let emailFinal = customerEmail;
-    if (!emailFinal || !emailFinal.includes('@')) {
-        emailFinal = "cliente@investbroker.com";
-    }
+    if (!emailFinal || !emailFinal.includes('@')) emailFinal = "cliente@investbroker.com";
 
-    // Payload genérico para criação de cobrança PIX
+    // Payload padrão para criação de cobrança PIX
     const payload = {
       amount: valorCentavos,
-      payment_method: "pix",
+      paymentMethod: "PIX",
       customer: {
         name: customerName || "Cliente Teste",
         email: emailFinal,
-        document: { type: "cpf", number: "52998224725" },
-        phone: "11999999999"
+        document: { type: "CPF", number: "52998224725" }
       },
-      items: [{ title: "Deposito", unit_price: valorCentavos, quantity: 1, tangible: false }],
-      // URL do seu webhook no Cloudflare Pages
-      postback_url: "https://investbrokerr.pages.dev/webhook"
+      postbackUrl: "https://investbrokerr.pages.dev/webhook"
     };
 
-    // ATENÇÃO: Confirme na documentação da FinX Pay qual é o endpoint exato (ex: /v1/pix, /v1/charges, /v1/cobranca)
-    const response = await fetch("https://api.finxpay.com/v1/pix", {
+    // ⚠️ ATENÇÃO: Confirme na documentação da FinX Pay qual é a rota exata.
+    // Exemplos comuns: /v1/pix, /v1/transactions, /transactions/payment, /v1/charges
+    const response = await fetch("https://finxpay.tech/v1/pix", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": apiKey // Autenticação conforme a imagem do painel
+        "x-api-key": apiKey
       },
       body: JSON.stringify(payload)
     });
@@ -59,11 +53,11 @@ export async function onRequestPost(context) {
       return new Response(JSON.stringify({ error: mensagemErro }), { status: response.status, headers });
     }
 
-    // Tenta extrair o QR Code de diferentes locais possíveis na resposta
-    const qrCode = data.qrCode || data.pix?.qr_code || data.point_of_interaction?.transaction_data?.qr_code || data.qr_code;
+    // Tenta extrair o código copia-e-cola de campos comuns na resposta
+    const qrCode = data.pix?.qrCode || data.pix?.brCode || data.qrCode || data.brCode || data.point_of_interaction?.transaction_data?.qr_code;
     
     if (!qrCode) {
-      return new Response(JSON.stringify({ error: "Resposta da API não contém o QR Code esperado.", debug: data }), { status: 500, headers });
+      return new Response(JSON.stringify({ error: "API não retornou o QR Code esperado. Verifique o formato da resposta.", debug: data }), { status: 500, headers });
     }
 
     return new Response(JSON.stringify({ qrCode: qrCode }), { status: 200, headers });
