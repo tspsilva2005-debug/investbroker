@@ -122,7 +122,7 @@ button{font-family:inherit}
   <div class="logo-area"><span style="font-size:1.5rem">≡</span> Invest<span>Broker</span> <small>SIMULADOR DE TRADING</small></div>
   <div class="bonus">🚀 Bônus de demonstração <strong>50%</strong></div>
   <div class="account">
-   <div class="balance"><small id="uname">CONTA DEMO</small><span id="ubal">$0.00</span></div>
+   <div class="balance"><small id="uname">CONTA DEMO</small><span id="ubal">R$ 0,00</span></div>
    <button class="btn-dep" id="go-dep">+ Depósito</button>
    <button class="btn-wd">Retirada</button>
    <button class="btn-out" id="btn-out">Sair</button>
@@ -154,8 +154,8 @@ button{font-family:inherit}
    <div class="ph"><h3 id="aname">🇺🇸 USD/IDR (OTC)</h3><div class="pending">🟢 PREÇO SIMULADO</div></div>
    <div class="form">
     <div class="g2"><label>Tempo</label><div class="ctrl"><button id="tm" aria-label="Diminuir tempo">-</button><input type="text" id="time" value="00:01:00" readonly><button id="tp" aria-label="Aumentar tempo">+</button></div></div>
-    <div class="g2"><label for="inv">Investimento ($)</label><div class="ctrl"><button id="im" aria-label="Diminuir">-</button><input type="number" id="inv" value="100" min="1"><button id="ip" aria-label="Aumentar">+</button></div></div>
-    <div class="payout"><span>Pagamento</span><b id="pay">$187.00</b></div>
+    <div class="g2"><label for="inv">Investimento (R$)</label><div class="ctrl"><button id="im" aria-label="Diminuir">-</button><input type="number" id="inv" value="100" min="1"><button id="ip" aria-label="Aumentar">+</button></div></div>
+    <div class="payout"><span>Pagamento</span><b id="pay">R$ 187,00</b></div>
     <div class="tb"><button class="bt buy" id="buy">Comprar <span>⬆️</span></button><button class="bt sell" id="sell">Vender <span>⬇️</span></button></div>
     <div class="msg" id="tmsg" role="status"></div>
    </div>
@@ -171,16 +171,16 @@ button{font-family:inherit}
  <div class="dep">
   <div class="dh"><h2>Adicionar fundos</h2><button class="back" id="close-dep">✖ Fechar</button></div>
   <div class="dc">
-   <div class="binfo"><span>Saldo atual:</span><strong id="cbal">$0.00</strong></div>
+   <div class="binfo"><span>Saldo atual:</span><strong id="cbal">R$ 0,00</strong></div>
    <div class="methods">
     <div class="method active"><i>⚡</i>PIX</div>
     <div class="method"><i>💳</i>Cartão</div>
     <div class="method"><i>₿</i>Cripto</div>
    </div>
    <div class="dgroup">
-    <label for="amount">Valor do depósito ($)</label>
-    <div class="dctrl"><span>$</span><input type="number" id="amount" placeholder="0.00" min="10"></div>
-    <div class="quick"><button data-v="50">+$50</button><button data-v="100">+$100</button><button data-v="500">+$500</button><button data-v="1000">+$1000</button></div>
+    <label for="amount">Valor do depósito (R$)</label>
+    <div class="dctrl"><span>R$</span><input type="number" id="amount" placeholder="0.00" min="10"></div>
+    <div class="quick"><button data-v="50">+R$ 50</button><button data-v="100">+R$ 100</button><button data-v="500">+R$ 500</button><button data-v="1000">+R$ 1000</button></div>
    </div>
    <button class="btn-confirm" id="confirm">Confirmar depósito</button>
    <div id="dmsg" class="msg" role="status"></div>
@@ -209,9 +209,9 @@ var render=function(){
  $(ids[r]).classList.add('on');
  if(r==='corretora'){
   $('uname').textContent=(store.get('user_name')||'').toUpperCase()+' · DEMO';
-  $('ubal').textContent='$'+bal().toFixed(2);
+  $('ubal').textContent='R$ '+bal().toFixed(2);
  }
- if(r==='deposito')$('cbal').textContent='$'+bal().toFixed(2);
+ if(r==='deposito')$('cbal').textContent='R$ '+bal().toFixed(2);
  window.scrollTo(0,0);
 }
 window.addEventListener('hashchange',()=>render());
@@ -234,13 +234,13 @@ document.querySelectorAll('.method').forEach(m=>m.onclick=()=>{
 document.querySelectorAll('.quick button').forEach(b=>b.onclick=()=>{$('amount').value=b.dataset.v});
 
 // ==========================================
-// CHAMADA PARA A GATEWAY (FREEPAY) - CLOUDFLARE PAGES
+// CHAMADA PARA A GATEWAY (FREEPAY) 
 // ==========================================
 $('confirm').onclick = async () => {
  const a = parseFloat($('amount').value), m = $('dmsg');
  if(isNaN(a) || a < 10){
      m.className='msg bad';
-     m.textContent='O valor mínimo é $10.00.';
+     m.textContent='O valor mínimo é R$ 10,00.';
      return;
  }
  
@@ -248,7 +248,6 @@ $('confirm').onclick = async () => {
  m.textContent='Gerando pagamento seguro...';
 
  try {
-     // AQUI ESTÁ A CORREÇÃO: URL correta do Cloudflare Pages
      const response = await fetch('/criar-pagamento', {
          method: 'POST',
          headers: { 'Content-Type': 'application/json' },
@@ -292,26 +291,26 @@ function step(a){const o=a.p;a.p*=1+(Math.random()-.5)*.0016;a.h.push(a.p);if(a.
 A.forEach(a=>{for(let i=0;i<200;i++)step(a)});
 const fmtP=v=>v>1000?v.toFixed(2):v.toFixed(4);
 const fmtT=s=>[Math.floor(s/3600),Math.floor(s%3600/60),s%60].map(n=>String(n).padStart(2,'0')).join(':');
-function setBal(v){store.set('user_balance',String(v));$('ubal').textContent='$'+v.toFixed(2)}
+function setBal(v){store.set('user_balance',String(v));$('ubal').textContent='R$ '+v.toFixed(2)}
 function say(t,c){const m=$('tmsg');m.className='msg '+(c||'bad');m.textContent=t}
 function drawAssets(){
  document.querySelector('.assets').innerHTML=A.map((a,i)=>'<div class="asset'+(i===cur?' active':'')+'" data-i="'+i+'">'+a.n+' <span class="pct">'+a.r+'%</span></div>').join('');
  $('aname').textContent=A[cur].n;upPay();
 }
-function upPay(){const v=parseFloat($('inv').value)||0;$('pay').textContent='$'+(v*(1+A[cur].r/100)).toFixed(2)}
+function upPay(){const v=parseFloat($('inv').value)||0;$('pay').textContent='R$ '+(v*(1+A[cur].r/100)).toFixed(2)}
 function renderList(){
  $('tab-o').textContent='Operações '+open.length;$('tab-h').textContent='Histórico '+done.length;
  $('tab-o').className=tab==='o'?'active':'';$('tab-h').className=tab==='h'?'active':'';
  const L=$('list');
  if(tab==='o'){
-  L.innerHTML=open.length?open.map(t=>'<div class="row"><div>'+A[t.i].n+'<small>'+(t.dir==='buy'?'⬆️ Compra':'⬇️ Venda')+' · entrada '+fmtP(t.entry)+'</small></div><div style="text-align:right">$'+t.inv.toFixed(2)+'<small>'+fmtT(Math.max(0,Math.ceil((t.end-Date.now())/1000)))+'</small></div></div>').join(''):'<div class="empty2">Nenhuma operação aberta.</div>';
+  L.innerHTML=open.length?open.map(t=>'<div class="row"><div>'+A[t.i].n+'<small>'+(t.dir==='buy'?'⬆️ Compra':'⬇️ Venda')+' · entrada '+fmtP(t.entry)+'</small></div><div style="text-align:right">R$ '+t.inv.toFixed(2)+'<small>'+fmtT(Math.max(0,Math.ceil((t.end-Date.now())/1000)))+'</small></div></div>').join(''):'<div class="empty2">Nenhuma operação aberta.</div>';
  }else{
-  L.innerHTML=done.length?done.map(t=>'<div class="row"><div>'+t.n+'<small>'+(t.dir==='buy'?'⬆️ Compra':'⬇️ Venda')+' · $'+t.inv.toFixed(2)+'</small></div><div class="'+(t.profit>0?'win':t.profit<0?'lose':'')+'" style="text-align:right">'+(t.profit>0?'+':'')+'$'+t.profit.toFixed(2)+'</div></div>').join(''):'<div class="empty2">Nenhuma operação encerrada ainda.</div>';
+  L.innerHTML=done.length?done.map(t=>'<div class="row"><div>'+t.n+'<small>'+(t.dir==='buy'?'⬆️ Compra':'⬇️ Venda')+' · R$ '+t.inv.toFixed(2)+'</small></div><div class="'+(t.profit>0?'win':t.profit<0?'lose':'')+'" style="text-align:right">'+(t.profit>0?'+':'')+'R$ '+t.profit.toFixed(2)+'</div></div>').join(''):'<div class="empty2">Nenhuma operação encerrada ainda.</div>';
  }
 }
 function place(dir){
  const inv=parseFloat($('inv').value);
- if(!(inv>=1))return say('Informe um investimento de pelo menos $1.');
+ if(!(inv>=1))return say('Informe um investimento de pelo menos R$ 1,00.');
  if(inv>bal())return say('Saldo insuficiente. Adicione fundos fictícios em Depósito.');
  setBal(bal()-inv);
  open.push({i:cur,dir,inv,entry:A[cur].p,end:Date.now()+T[ti]*1000});
@@ -326,7 +325,7 @@ function tick(){
   const profit=res===1?t.inv*a.r/100:res===-1?-t.inv:0;
   setBal(bal()+(res===-1?0:t.inv+profit));
   done.unshift({n:a.n,dir:t.dir,inv:t.inv,profit});changed=true;
-  say(res===1?'Você ganhou $'+profit.toFixed(2)+' em '+a.n+'.':res===0?'Empate em '+a.n+': valor devolvido.':'Você perdeu $'+t.inv.toFixed(2)+' em '+a.n+'.',res===1?'ok':'bad');
+  say(res===1?'Você ganhou R$ '+profit.toFixed(2)+' em '+a.n+'.':res===0?'Empate em '+a.n+': valor devolvido.':'Você perdeu R$ '+t.inv.toFixed(2)+' em '+a.n+'.',res===1?'ok':'bad');
   return false;
  });
  if(changed){done=done.slice(0,30);store.set('done',JSON.stringify(done));store.set('open',JSON.stringify(open))}
