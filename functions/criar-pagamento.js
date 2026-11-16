@@ -15,7 +15,7 @@ export async function onRequestPost(context) {
     const secretKey = env.FREEPAY_SECRET_KEY;
     
     if (!publicKey || !secretKey) {
-   return new Response(JSON.stringify({ error: "TESTE: O CODIGO NOVO DA FREEPAY ESTA RODANDO!" }), { status: 500, headers });
+      return new Response(JSON.stringify({ error: "Chaves de API não configuradas." }), { status: 500, headers });
     }
 
     const authString = btoa(`${publicKey}:${secretKey}`);
@@ -25,6 +25,9 @@ export async function onRequestPost(context) {
     if (!emailFinal || !emailFinal.includes('@')) {
         emailFinal = "cliente@investbroker.com";
     }
+
+    // Gera uma chave única para esta transação (evita erro de duplicidade)
+    const idempotencyKey = crypto.randomUUID();
 
     const payload = {
       amount: valorCentavos,
@@ -44,7 +47,9 @@ export async function onRequestPost(context) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Basic ${authString}`
+        "Authorization": `Basic ${authString}`,
+        "Idempotency-Key": idempotencyKey,
+        "RequestID": idempotencyKey
       },
       body: JSON.stringify(payload)
     });
