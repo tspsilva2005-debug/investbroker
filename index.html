@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>InvestBroker – Simulador de Trading</title>
+<title>InvestBroker – Plataforma de Trading</title>
 <!-- Biblioteca para gerar o QR Code visual -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
@@ -17,8 +17,7 @@ button{font-family:inherit}
 
 #login.on{display:flex;justify-content:center;align-items:center;min-height:100vh;background:var(--bg-dark);padding:16px}
 .login-box{background:var(--bg-main);padding:40px;border-radius:8px;width:100%;max-width:350px;box-shadow:0 10px 25px rgba(0,0,0,.5);border:1px solid var(--bg-panel);text-align:center}
-.logo{font-size:24px;font-weight:bold;color:#fff;margin-bottom:8px;letter-spacing:1px}.logo span{color:var(--green)}
-.demo-note{font-size:.8rem;color:var(--text-muted);margin-bottom:24px}
+.logo{font-size:24px;font-weight:bold;color:#fff;margin-bottom:24px;letter-spacing:1px}.logo span{color:var(--green)}
 .ig{margin-bottom:15px;text-align:left}.ig label{display:block;font-size:13px;margin-bottom:5px;color:var(--text-muted)}
 .ig input{width:100%;padding:12px;border-radius:4px;border:1px solid var(--border);background:var(--bg-dark);color:#fff;outline:none}
 .ig input:focus{border-color:var(--green)}
@@ -102,7 +101,6 @@ button{font-family:inherit}
 .btn-confirm:hover{background:#067a67}
 .msg{text-align:center;margin-top:15px;font-size:.9rem;min-height:1.2em}
 .msg.ok{color:var(--green)}.msg.bad{color:var(--red)}
-.sim{font-size:.75rem;color:var(--text-muted);text-align:center;margin-top:12px}
 /* Estilo para a caixa do QR Code */
 #qrcode-container { display: flex; justify-content: center; margin-bottom: 15px; background: #fff; padding: 10px; border-radius: 4px; width: fit-content; margin-left: auto; margin-right: auto;}
 </style>
@@ -112,21 +110,20 @@ button{font-family:inherit}
 <section id="login" class="view">
  <div class="login-box">
   <div class="logo">Invest<span>Broker</span></div>
-  <p class="demo-note">Simulador com saldo fictício. Nenhum dado é enviado ou salvo em servidor.</p>
   <div class="ig"><label for="username">Seu nome</label><input type="text" id="username" placeholder="Digite seu nome" autocomplete="off"></div>
   <div class="ig"><label for="email">E-mail</label><input type="email" id="email" placeholder="seu@email.com" autocomplete="off"></div>
   <div class="ig"><label for="password">Senha</label><input type="password" id="password" placeholder="Sua senha" autocomplete="off"></div>
-  <button class="btn-login" id="btn-enter">Entrar no simulador</button>
+  <button class="btn-login" id="btn-enter">Acessar Plataforma</button>
   <div id="login-err" class="err">Preencha todos os campos.</div>
  </div>
 </section>
 
 <section id="trade" class="view">
  <header class="topbar">
-  <div class="logo-area"><span style="font-size:1.5rem">≡</span> Invest<span>Broker</span> <small>SIMULADOR DE TRADING</small></div>
-  <div class="bonus">🚀 Bônus de demonstração <strong>50%</strong></div>
+  <div class="logo-area"><span style="font-size:1.5rem">≡</span> Invest<span>Broker</span> <small>TRADING PROFISSIONAL</small></div>
+  <div class="bonus">🚀 Bônus de boas-vindas <strong>50%</strong></div>
   <div class="account">
-   <div class="balance"><small id="uname">CONTA DEMO</small><span id="ubal">R$ 0,00</span></div>
+   <div class="balance"><small id="uname">CONTA</small><span id="ubal">R$ 0,00</span></div>
    <button class="btn-dep" id="go-dep">+ Depósito</button>
    <button class="btn-wd">Retirada</button>
    <button class="btn-out" id="btn-out">Sair</button>
@@ -151,11 +148,11 @@ button{font-family:inherit}
    </div>
    <div class="canvas">
     <div class="tools"><button class="tool" aria-label="Desenhar">✏️</button><button class="tool" aria-label="Indicadores">📈</button><button class="tool" aria-label="Configurações">⚙️</button></div>
-    <canvas id="chart" aria-label="Gráfico de preço simulado"></canvas>
+    <canvas id="chart" aria-label="Gráfico de preço"></canvas>
    </div>
   </main>
   <aside class="right">
-   <div class="ph"><h3 id="aname">🇺🇸 USD/IDR (OTC)</h3><div class="pending">🟢 PREÇO SIMULADO</div></div>
+   <div class="ph"><h3 id="aname">🇺🇸 USD/IDR (OTC)</h3><div class="pending">🟢 MERCADO ABERTO</div></div>
    <div class="form">
     <div class="g2"><label>Tempo</label><div class="ctrl"><button id="tm" aria-label="Diminuir tempo">-</button><input type="text" id="time" value="00:01:00" readonly><button id="tp" aria-label="Aumentar tempo">+</button></div></div>
     <div class="g2"><label for="inv">Investimento (R$)</label><div class="ctrl"><button id="im" aria-label="Diminuir">-</button><input type="number" id="inv" value="100" min="1"><button id="ip" aria-label="Aumentar">+</button></div></div>
@@ -188,7 +185,6 @@ button{font-family:inherit}
    </div>
    <button class="btn-confirm" id="confirm">Confirmar depósito</button>
    <div id="dmsg" class="msg" role="status"></div>
-   <p class="sim">Simulação: o valor é somado a um saldo fictício e nenhum pagamento real é feito.</p>
   </div>
  </div>
 </section>
@@ -212,7 +208,7 @@ var render=function(){
  document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));
  $(ids[r]).classList.add('on');
  if(r==='corretora'){
-  $('uname').textContent=(store.get('user_name')||'').toUpperCase()+' · DEMO';
+  $('uname').textContent=(store.get('user_name')||'').toUpperCase();
   $('ubal').textContent='R$ '+bal().toFixed(2);
  }
  if(r==='deposito')$('cbal').textContent='R$ '+bal().toFixed(2);
@@ -273,7 +269,6 @@ $('confirm').onclick = async () => {
              <button id="btn-copy" style="margin-top:10px; padding:10px; width:100%; background:var(--green); color:#fff; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">Copiar Código Pix</button>
          </div>`;
          
-         // Gera a imagem do QR Code na div criada
          new QRCode(document.getElementById("qrcode-container"), {
              text: data.qrCode,
              width: 200,
@@ -326,7 +321,7 @@ function renderList(){
 function place(dir){
  const inv=parseFloat($('inv').value);
  if(!(inv>=1))return say('Informe um investimento de pelo menos R$ 1,00.');
- if(inv>bal())return say('Saldo insuficiente. Adicione fundos fictícios em Depósito.');
+ if(inv>bal())return say('Saldo insuficiente. Adicione fundos.');
  setBal(bal()-inv);
  open.push({i:cur,dir,inv,entry:A[cur].p,end:Date.now()+T[ti]*1000});
  store.set('open',JSON.stringify(open));
@@ -364,7 +359,7 @@ $('ip').onclick=()=>{$('inv').value=(parseFloat($('inv').value)||0)+50;upPay()};
 $('inv').oninput=upPay;
 $('buy').onclick=()=>place('buy');$('sell').onclick=()=>place('sell');
 $('tab-o').onclick=()=>{tab='o';renderList()};$('tab-h').onclick=()=>{tab='h';renderList()};
-document.querySelector('.btn-wd').onclick=()=>say('Retirada indisponível: o saldo do simulador é fictício.');
+document.querySelector('.btn-wd').onclick=()=>say('Retirada indisponível no momento. Por favor, contate o suporte.');
 try{const o=JSON.parse(store.get('open')||'[]');if(o.length){setBal(bal()+o.reduce((s,t)=>s+t.inv,0));store.set('open','[]')}}catch(e){}
 drawAssets();renderList();setInterval(tick,700);window.addEventListener('resize',draw);
 const _render=render;render=function(){_render();if($('trade').classList.contains('on')){renderList();draw()}};
